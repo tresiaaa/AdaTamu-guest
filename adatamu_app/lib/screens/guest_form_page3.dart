@@ -7,12 +7,6 @@ import '../widgets/guest_dropdown_field.dart';
 import '../widgets/guest_text_field.dart';
 import 'guest_success_page.dart';
 
-/// Page 3: Form keperluan tamu.
-/// - Dropdown "Keperluan" dengan opsi: KWH Meter, Pembayaran Tagihan,
-///   Perubahan Daya Listrik, Masalah Administrasi.
-/// - Textarea "Keterangan Tambahan" (opsional).
-/// - Tombol "Simpan" -> menyimpan seluruh data (page 2 + page 3) ke
-///   Cloud Firestore lewat [GuestService].
 class GuestFormPage3 extends StatefulWidget {
   final String nama;
   final String jenisKelamin;
@@ -97,7 +91,8 @@ class _GuestFormPage3State extends State<GuestFormPage3> {
           Container(
             height: 70,
             width: double.infinity,
-            decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+            decoration:
+                const BoxDecoration(gradient: AppColors.backgroundGradient),
           ),
           Expanded(
             child: SafeArea(
@@ -112,7 +107,8 @@ class _GuestFormPage3State extends State<GuestFormPage3> {
                         label: 'Keperluan',
                         value: _keperluan,
                         options: _keperluanOptions,
-                        onChanged: (value) => setState(() => _keperluan = value),
+                        onChanged: (value) =>
+                            setState(() => _keperluan = value),
                       ),
                       const SizedBox(height: 24),
                       GuestTextField(
@@ -122,13 +118,24 @@ class _GuestFormPage3State extends State<GuestFormPage3> {
                         maxLines: 5,
                       ),
                       const SizedBox(height: 40),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: AnimatedPillButton(
-                          label: 'Simpan',
-                          isLoading: _isSaving,
-                          onPressed: _isSaving ? null : _saveGuest,
-                        ),
+                      // Baris tombol: Kembali (abu-abu) di kiri, Simpan (kuning) di kanan.
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          AnimatedPillButton(
+                            label: 'Kembali',
+                            backgroundColor: const Color(0xFFBDBDBD),
+                            onPressed: _isSaving
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                          ),
+                          const SizedBox(width: 12),
+                          AnimatedPillButton(
+                            label: 'Simpan',
+                            isLoading: _isSaving,
+                            onPressed: _isSaving ? null : _saveGuest,
+                          ),
+                        ],
                       ),
                     ],
                   ),

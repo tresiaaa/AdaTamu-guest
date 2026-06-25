@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Field input pil putih, berubah warna biru muda saat fokus
-/// (meniru efek highlight yang terlihat pada video referensi).
+/// Field input pil putih. Tanpa highlight biru saat fokus.
+/// Pesan error tampil DI LUAR bubble (merah), otomatis hilang saat
+/// pengguna mengetik, dan TIDAK menggeser layout (ruang error selalu ada).
 class GuestTextField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
@@ -26,57 +27,88 @@ class GuestTextField extends StatefulWidget {
 }
 
 class _GuestTextFieldState extends State<GuestTextField> {
-  final FocusNode _focusNode = FocusNode();
-  bool _isFocused = false;
+  String? _errorText;
 
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(() {
-      setState(() => _isFocused = _focusNode.hasFocus);
-    });
+    // Hapus pesan error begitu pengguna mulai/sedang mengisi.
+    widget.controller.addListener(_clearErrorOnType);
+  }
+
+  void _clearErrorOnType() {
+    if (_errorText != null) {
+      setState(() => _errorText = null);
+    }
   }
 
   @override
   void dispose() {
-    _focusNode.dispose();
+    widget.controller.removeListener(_clearErrorOnType);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool hasError = _errorText != null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(widget.label, style: AppTextStyles.fieldLabel),
         const SizedBox(height: 10),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        Container(
           decoration: BoxDecoration(
-            color: _isFocused ? AppColors.inputFillFocused : AppColors.inputFill,
+            color: AppColors.inputFill,
             borderRadius: BorderRadius.circular(widget.maxLines > 1 ? 16 : 30),
             border: Border.all(
-              color: _isFocused ? AppColors.inputBorderFocused : Colors.transparent,
+              color: hasError ? Colors.red : Colors.transparent,
               width: 1.5,
             ),
           ),
           child: TextFormField(
             controller: widget.controller,
-            focusNode: _focusNode,
             keyboardType: widget.keyboardType,
-            validator: widget.validator,
             maxLines: widget.maxLines,
             textAlign: widget.maxLines > 1 ? TextAlign.start : TextAlign.center,
             style: const TextStyle(fontSize: 15),
+            validator: (value) {
+              final result = widget.validator?.call(value);
+              // Tunda setState agar tidak bentrok dengan proses build.
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && _errorText != result) {
+                  setState(() => _errorText = result);
+                }
+              });
+              return result;
+            },
             decoration: InputDecoration(
               hintText: widget.hintText,
               border: InputBorder.none,
+              // Sembunyikan error bawaan agar tidak muncul di dalam bubble.
+              errorStyle: const TextStyle(height: 0, fontSize: 0),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 24,
                 vertical: 14,
               ),
             ),
           ),
+        ),
+        SizedBox(
+          height: 22,
+          width: double.infinity,
+          child: hasError
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 12, right: 12),
+                  child: Text(
+                    _errorText!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                  ),
+                )
+              : null,
         ),
       ],
     );

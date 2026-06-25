@@ -62,15 +62,17 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
         children: [
           // Header gradient kecil di atas, konsisten dengan dashboard.
           Container(
-            height: 70,
+            height: 50,
             width: double.infinity,
-            decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+            decoration:
+                const BoxDecoration(gradient: AppColors.backgroundGradient),
           ),
+
           Expanded(
             child: SafeArea(
               top: false,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -91,7 +93,8 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
                         label: 'Jenis Kelamin',
                         value: _jenisKelamin,
                         options: _jenisKelaminOptions,
-                        onChanged: (value) => setState(() => _jenisKelamin = value),
+                        onChanged: (value) =>
+                            setState(() => _jenisKelamin = value),
                       ),
                       const SizedBox(height: 24),
                       GuestTextField(
@@ -109,19 +112,20 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
                       GuestTextField(
                         label: 'Nomor Handphone',
                         controller: _hpController,
-                        hintText: 'Contoh: 081234567890',
+                        hintText: 'Masukkan nomor handphone',
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Nomor handphone tidak boleh kosong';
                           }
-                          if (!RegExp(r'^[0-9+\-\s]{8,15}$').hasMatch(value.trim())) {
+                          if (!RegExp(r'^[0-9+\-\s]{8,15}$')
+                              .hasMatch(value.trim())) {
                             return 'Nomor handphone tidak valid';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 24),
                       Align(
                         alignment: Alignment.centerRight,
                         child: AnimatedPillButton(
