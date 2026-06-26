@@ -8,8 +8,10 @@ class AppColors {
 
   // Warna gradient utama (dashboard & header form), dikalibrasi dari
   // sampel piksel langsung pada gambar referensi dashboard.
-  static const Color gradientStart = Color(0xFF035B71); // teal gelap (kiri atas)
-  static const Color gradientEnd = Color(0xFF06ADD7); // cyan terang (kanan bawah)
+  static const Color gradientStart =
+      Color(0xFF035B71); // teal gelap (kiri atas)
+  static const Color gradientEnd =
+      Color(0xFF06ADD7); // cyan terang (kanan bawah)
 
   static const LinearGradient backgroundGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -68,7 +70,7 @@ class AppTextStyles {
       );
 
   static TextStyle get fieldLabel => GoogleFonts.poppins(
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: FontWeight.w700,
         color: AppColors.labelText,
       );

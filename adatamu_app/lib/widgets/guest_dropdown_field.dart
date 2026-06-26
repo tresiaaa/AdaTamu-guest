@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
-class GuestDropdownField extends StatelessWidget {
+/// Field dropdown bergaya pil putih, konsisten dengan [GuestTextField]:
+/// border jadi merah dan pesan error tampil DI LUAR bubble saat tidak valid.
+class GuestDropdownField extends StatefulWidget {
   final String label;
   final String? value;
   final List<String> options;
   final ValueChanged<String?> onChanged;
-  final String? Function(String?)? validator;
 
   const GuestDropdownField({
     super.key,
@@ -14,64 +16,123 @@ class GuestDropdownField extends StatelessWidget {
     required this.value,
     required this.options,
     required this.onChanged,
-    this.validator,
   });
 
   @override
+  State<GuestDropdownField> createState() => GuestDropdownFieldState();
+}
+
+class GuestDropdownFieldState extends State<GuestDropdownField> {
+  String? _errorText;
+
+  /// Dipanggil dari luar (page2) saat tombol "Berikutnya" ditekan,
+  /// supaya tampilannya konsisten dengan validasi field teks lain.
+  /// Mengembalikan true jika valid (sudah dipilih).
+  bool validate() {
+    if (widget.value == null) {
+      setState(() => _errorText = 'Jenis kelamin tidak boleh kosong');
+      return false;
+    }
+    setState(() => _errorText = null);
+    return true;
+  }
+
+  void _clearError() {
+    if (_errorText != null) {
+      setState(() => _errorText = null);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bool hasError = _errorText != null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(label, style: AppTextStyles.fieldLabel),
+        Text(widget.label, style: AppTextStyles.fieldLabel),
         const SizedBox(height: 10),
-        PopupMenuButton<String>(
-          // Posisi menu selalu di bawah tombol/anchor.
-          position: PopupMenuPosition.under,
-          offset: const Offset(0, 8),
-          constraints: const BoxConstraints(minWidth: double.infinity),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          color: AppColors.inputFill,
-          onSelected: (selected) => onChanged(selected),
-          itemBuilder: (context) => options
-              .map(
-                (opt) => PopupMenuItem<String>(
-                  value: opt,
-                  child: Center(
-                    child: Text(opt, style: const TextStyle(fontSize: 15)),
-                  ),
-                ),
-              )
-              .toList(),
-          // Tampilan field (anchor) bergaya pil putih.
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: AppColors.inputFill,
-              borderRadius: BorderRadius.circular(30),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: hasError ? Colors.red : Colors.transparent,
+              width: 1.5,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Teks rata tengah; ikon diletakkan di kanan.
-                Expanded(
-                  child: Text(
-                    value ?? 'Pilih',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: value == null ? Colors.black54 : Colors.black,
+          ),
+          child: PopupMenuButton<String>(
+            // Posisi menu selalu di bawah tombol/anchor.
+            position: PopupMenuPosition.under,
+            offset: const Offset(0, 8),
+            constraints: const BoxConstraints(minWidth: double.infinity),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            color: AppColors.inputFill,
+            onSelected: (selected) {
+              _clearError();
+              widget.onChanged(selected);
+            },
+            itemBuilder: (context) => widget.options
+                .map(
+                  (opt) => PopupMenuItem<String>(
+                    value: opt,
+                    child: Center(
+                      child:
+                          Text(opt, style: GoogleFonts.poppins(fontSize: 14)),
                     ),
                   ),
-                ),
-                const Icon(Icons.keyboard_arrow_down_rounded),
-              ],
+                )
+                .toList(),
+            // Tampilan field (anchor) bergaya pil putih.
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+              decoration: BoxDecoration(
+                color: AppColors.inputFill,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Teks rata tengah; ikon diletakkan di kanan.
+                  Expanded(
+                    child: Text(
+                      widget.value ?? 'Pilih',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: widget.value == null
+                            ? Colors.black54
+                            : Colors.black,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.keyboard_arrow_down_rounded),
+                ],
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 22),
+        SizedBox(
+          height: 26,
+          width: double.infinity,
+          child: hasError
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 12, right: 12),
+                  child: Text(
+                    _errorText!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      color: Colors.red,
+                      fontSize: 13,
+                    ),
+                  ),
+                )
+              : null,
+        ),
       ],
     );
   }

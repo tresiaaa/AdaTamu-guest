@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../widgets/adatamu_logo.dart';
 import '../widgets/animated_pill_button.dart';
@@ -7,9 +6,6 @@ import '../widgets/guest_dropdown_field.dart';
 import '../widgets/guest_text_field.dart';
 import 'guest_form_page3.dart';
 
-/// Page 2: Form pengisian data diri tamu.
-/// Field: Nama Lengkap, Jenis Kelamin (dropdown), Alamat Lengkap,
-/// Nomor Handphone. Tombol "Berikutnya" memvalidasi lalu lanjut ke page 3.
 class GuestFormPage2 extends StatefulWidget {
   const GuestFormPage2({super.key});
 
@@ -19,6 +15,7 @@ class GuestFormPage2 extends StatefulWidget {
 
 class _GuestFormPage2State extends State<GuestFormPage2> {
   final _formKey = GlobalKey<FormState>();
+  final _jenisKelaminFieldKey = GlobalKey<GuestDropdownFieldState>();
 
   final _namaController = TextEditingController();
   final _alamatController = TextEditingController();
@@ -36,13 +33,11 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
   }
 
   void _goToNextPage() {
-    if (!_formKey.currentState!.validate()) return;
-    if (_jenisKelamin == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih jenis kelamin terlebih dahulu')),
-      );
-      return;
-    }
+    final bool isFormValid = _formKey.currentState!.validate();
+    final bool isJenisKelaminValid =
+        _jenisKelaminFieldKey.currentState?.validate() ?? true;
+
+    if (!isFormValid || !isJenisKelaminValid) return;
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -62,7 +57,7 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
       backgroundColor: AppColors.formBackground,
       body: Column(
         children: [
-          // Header gradient dengan logo AdaTamu + judul halaman.
+          // Header gradient dengan logo AdaTamu di pojok kiri atas.
           Container(
             width: double.infinity,
             decoration:
@@ -75,17 +70,9 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
                   vertical: 12,
                 ),
                 child: Row(
-                  children: [
-                    const AdaTamuLogo(scale: 0.7),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Data Diri Tamu',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: const [
+                    AdaTamuLogo(scale: 0.55),
                   ],
                 ),
               ),
@@ -96,7 +83,7 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
             child: SafeArea(
               top: false,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -112,8 +99,9 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       GuestDropdownField(
+                        key: _jenisKelaminFieldKey,
                         label: 'Jenis Kelamin',
                         value: _jenisKelamin,
                         options: _jenisKelaminOptions,
@@ -149,14 +137,16 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       Align(
                         alignment: Alignment.centerRight,
                         child: AnimatedPillButton(
                           label: 'Berikutnya',
                           onPressed: _goToNextPage,
+                          compact: true,
                         ),
                       ),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),

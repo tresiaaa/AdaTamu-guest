@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Field input pil putih. Tanpa highlight biru saat fokus.
-/// Pesan error tampil DI LUAR bubble (merah), otomatis hilang saat
-/// pengguna mengetik, dan TIDAK menggeser layout (ruang error selalu ada).
 class GuestTextField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
@@ -71,7 +68,7 @@ class _GuestTextFieldState extends State<GuestTextField> {
             keyboardType: widget.keyboardType,
             maxLines: widget.maxLines,
             textAlign: widget.maxLines > 1 ? TextAlign.start : TextAlign.center,
-            style: const TextStyle(fontSize: 15),
+            style: const TextStyle(fontSize: 13),
             validator: (value) {
               final result = widget.validator?.call(value);
               // Tunda setState agar tidak bentrok dengan proses build.
@@ -88,14 +85,14 @@ class _GuestTextFieldState extends State<GuestTextField> {
               // Sembunyikan error bawaan agar tidak muncul di dalam bubble.
               errorStyle: const TextStyle(height: 0, fontSize: 0),
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 14,
+                horizontal: 18,
+                vertical: 8,
               ),
             ),
           ),
         ),
         SizedBox(
-          height: 22,
+          height: 26,
           width: double.infinity,
           child: hasError
               ? Padding(

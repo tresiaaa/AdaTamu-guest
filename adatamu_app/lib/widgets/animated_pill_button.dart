@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Tombol pil kuning yang bisa berinteraksi: mengecil sedikit saat
-/// ditekan (efek "tactile") dan punya ripple efek bawaan Material.
-/// Dipakai untuk "Isi Buku Tamu", "Berikutnya", dan "Simpan".
 class AnimatedPillButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
   final IconData? icon;
   final Color backgroundColor;
+  final bool compact;
 
   const AnimatedPillButton({
     super.key,
@@ -18,6 +16,7 @@ class AnimatedPillButton extends StatefulWidget {
     this.isLoading = false,
     this.icon,
     this.backgroundColor = AppColors.buttonFormBackground,
+    this.compact = false,
   });
 
   @override
@@ -47,7 +46,10 @@ class _AnimatedPillButtonState extends State<AnimatedPillButton> {
         curve: Curves.easeOut,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.compact ? 20 : 28,
+            vertical: widget.compact ? 10 : 14,
+          ),
           decoration: BoxDecoration(
             color: disabled
                 ? widget.backgroundColor.withOpacity(0.6)
@@ -64,9 +66,9 @@ class _AnimatedPillButtonState extends State<AnimatedPillButton> {
                   ],
           ),
           child: widget.isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
+              ? SizedBox(
+                  width: widget.compact ? 16 : 20,
+                  height: widget.compact ? 16 : 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.4,
                     color: AppColors.buttonText,
@@ -76,10 +78,17 @@ class _AnimatedPillButtonState extends State<AnimatedPillButton> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (widget.icon != null) ...[
-                      Icon(widget.icon, size: 18, color: AppColors.buttonText),
+                      Icon(widget.icon,
+                          size: widget.compact ? 16 : 18,
+                          color: AppColors.buttonText),
                       const SizedBox(width: 8),
                     ],
-                    Text(widget.label, style: AppTextStyles.buttonLabel),
+                    Text(
+                      widget.label,
+                      style: widget.compact
+                          ? AppTextStyles.buttonLabel.copyWith(fontSize: 14)
+                          : AppTextStyles.buttonLabel,
+                    ),
                   ],
                 ),
         ),
