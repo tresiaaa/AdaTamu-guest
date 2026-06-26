@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Logo "AdaTamu": ikon buku terbuka dengan petir di tengah, lalu teks
-/// "Ada" (biru) + "Tamu" (kuning).
-///
-/// PENTING: bentuk ikon (buku + petir) dan warna teks ("Ada" = biru,
-/// "Tamu" = kuning) sudah final sesuai permintaan dan TIDAK BOLEH diubah.
-/// Jika perlu memperbesar/memperkecil logo, gunakan parameter [scale],
-/// jangan mengubah path di [_BookBoltPainter].
 class AdaTamuLogo extends StatelessWidget {
   final double scale;
   final bool showText;
@@ -55,8 +48,8 @@ class AdaTamuLogo extends StatelessWidget {
   }
 }
 
-/// Menggambar siluet buku terbuka (dua sisi melengkung simetris)
-/// dengan petir di tengah, sesuai logo pada gambar referensi.
+/// Menggambar buku terbuka (dua halaman yang terbuka ke atas, dengan
+/// spine/lipatan di tengah) dan petir kuning di tengahnya.
 class _BookBoltPainter extends CustomPainter {
   final Color color;
 
@@ -64,80 +57,71 @@ class _BookBoltPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
     final strokePaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.045
+      ..strokeWidth = w * 0.05
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final w = size.width;
-    final h = size.height;
-    final centerX = w / 2;
-
-    // Sisi kiri buku: dari atas-tengah, melengkung ke bawah lalu kembali
-    // ke tengah-bawah membentuk satu "kelopak" buku.
+    // ---- BUKU TERBUKA ----
+    // Halaman kiri: tepi luar lurus ke bawah, bagian atas sedikit melengkung
+    // (lembaran kertas), bertemu di tengah pada spine.
     final leftPage = Path()
-      ..moveTo(centerX, h * 0.12)
-      ..cubicTo(
-        centerX - w * 0.18, h * 0.02,
-        w * 0.06, h * 0.05,
-        w * 0.06, h * 0.30,
-      )
-      ..cubicTo(
-        w * 0.06, h * 0.55,
-        w * 0.06, h * 0.80,
-        w * 0.06, h * 0.80,
-      )
-      ..cubicTo(
-        w * 0.06, h * 0.80,
-        centerX - w * 0.20, h * 0.78,
-        centerX, h * 0.92,
-      );
-
-    // Sisi kanan buku: mirror dari sisi kiri.
-    final rightPage = Path()
-      ..moveTo(centerX, h * 0.12)
-      ..cubicTo(
-        centerX + w * 0.18, h * 0.02,
-        w * 0.94, h * 0.05,
-        w * 0.94, h * 0.30,
-      )
-      ..cubicTo(
-        w * 0.94, h * 0.55,
-        w * 0.94, h * 0.80,
-        w * 0.94, h * 0.80,
-      )
-      ..cubicTo(
-        w * 0.94, h * 0.80,
-        centerX + w * 0.20, h * 0.78,
-        centerX, h * 0.92,
-      );
-
-    // Garis tengah buku (tulang punggung / spine), sedikit melengkung.
-    final spine = Path()
-      ..moveTo(centerX, h * 0.12)
+      ..moveTo(cx, h * 0.22) // titik atas dekat spine
       ..quadraticBezierTo(
-        centerX - w * 0.01, h * 0.50,
-        centerX, h * 0.92,
+        w * 0.24, h * 0.10, // kontrol: kertas menggembung
+        w * 0.08, h * 0.20, // tepi kiri atas
+      )
+      ..lineTo(w * 0.08, h * 0.80) // turun ke tepi kiri bawah
+      ..quadraticBezierTo(
+        w * 0.24, h * 0.74,
+        cx, h * 0.86, // kembali ke tengah bawah (spine bawah)
       );
+
+    // Halaman kanan: mirror dari kiri.
+    final rightPage = Path()
+      ..moveTo(cx, h * 0.22)
+      ..quadraticBezierTo(
+        w * 0.76,
+        h * 0.10,
+        w * 0.92,
+        h * 0.20,
+      )
+      ..lineTo(w * 0.92, h * 0.80)
+      ..quadraticBezierTo(
+        w * 0.76,
+        h * 0.74,
+        cx,
+        h * 0.86,
+      );
+
+    // Spine (lipatan tengah) menghubungkan atas & bawah buku.
+    final spine = Path()
+      ..moveTo(cx, h * 0.22)
+      ..lineTo(cx, h * 0.86);
 
     canvas.drawPath(leftPage, strokePaint);
     canvas.drawPath(rightPage, strokePaint);
     canvas.drawPath(spine, strokePaint);
 
-    // Petir kuning di tengah buku, mengikuti bentuk kilat khas (zig-zag).
+    // ---- PETIR ----
+    // Petir kuning tebal, zig-zag klasik, melayang di atas buku.
     final boltPaint = Paint()
       ..color = const Color(0xFFFFEB3B)
       ..style = PaintingStyle.fill;
 
     final bolt = Path()
-      ..moveTo(centerX + w * 0.07, h * 0.18)
-      ..lineTo(centerX - w * 0.06, h * 0.46)
-      ..lineTo(centerX + w * 0.005, h * 0.46)
-      ..lineTo(centerX - w * 0.07, h * 0.80)
-      ..lineTo(centerX + w * 0.10, h * 0.50)
-      ..lineTo(centerX + w * 0.02, h * 0.50)
+      ..moveTo(cx + w * 0.09, h * 0.06) // ujung atas (kanan)
+      ..lineTo(cx - w * 0.11, h * 0.42) // turun ke kiri
+      ..lineTo(cx - w * 0.005, h * 0.42) // lekuk dalam
+      ..lineTo(cx - w * 0.07, h * 0.72) // ujung bawah runcing (kiri)
+      ..lineTo(cx + w * 0.13, h * 0.34) // naik ke kanan
+      ..lineTo(cx + w * 0.02, h * 0.34) // lekuk dalam kembali
       ..close();
 
     canvas.drawPath(bolt, boltPaint);

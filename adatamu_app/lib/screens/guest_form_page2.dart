@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../widgets/adatamu_logo.dart';
 import '../widgets/animated_pill_button.dart';
 import '../widgets/guest_dropdown_field.dart';
 import '../widgets/guest_text_field.dart';
@@ -60,12 +62,34 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
       backgroundColor: AppColors.formBackground,
       body: Column(
         children: [
-          // Header gradient kecil di atas, konsisten dengan dashboard.
+          // Header gradient dengan logo AdaTamu + judul halaman.
           Container(
-            height: 50,
             width: double.infinity,
             decoration:
                 const BoxDecoration(gradient: AppColors.backgroundGradient),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    const AdaTamuLogo(scale: 0.7),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Data Diri Tamu',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
 
           Expanded(
