@@ -10,19 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
-
-  # Font "Poppins" diambil lewat package ini (tidak perlu bundling file
-  # font manual). Lihat lib/theme/app_theme.dart.
   google_fonts: ^6.2.1
-
-  # Dipakai untuk mengakses Cloud Firestore lewat REST API di SEMUA
-  # platform (Android & Windows). Lihat lib/services/guest_service.dart
-  # untuk alasan kenapa REST API dipilih dibanding plugin cloud_firestore.
   http: ^1.2.2
-
-  # Dipakai untuk ambil foto tamu dari kamera ATAU galeri (lib/widgets/
-  # photo_picker_field.dart). Support Android, iOS, dan Windows.
   image_picker: ^1.1.2
+  camera: ^0.11.0+2
+  camera_windows: ^0.2.5
+  image: ^4.2.0
 
 dev_dependencies:
   flutter_test:

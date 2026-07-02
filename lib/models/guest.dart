@@ -6,7 +6,10 @@ class Guest {
   final String keperluan;
   final String keteranganTambahan;
   final String kodeTamu;
+  final String fotoUrl;
   final DateTime createdAt;
+  final String status;
+  final DateTime? waktuSelesai;
 
   Guest({
     required this.nama,
@@ -16,11 +19,12 @@ class Guest {
     required this.keperluan,
     required this.keteranganTambahan,
     required this.kodeTamu,
+    required this.fotoUrl,
     DateTime? createdAt,
+    this.status = 'menunggu',
+    this.waktuSelesai,
   }) : createdAt = createdAt ?? DateTime.now();
 
-  /// Untuk dikirim ke Cloud Firestore lewat REST API (lihat
-  /// services/guest_service.dart).
   Map<String, dynamic> toMap() {
     return {
       'nama': nama,
@@ -30,7 +34,10 @@ class Guest {
       'keperluan': keperluan,
       'keteranganTambahan': keteranganTambahan,
       'kodeTamu': kodeTamu,
-      'createdAt': createdAt.toIso8601String(),
+      'fotoUrl': fotoUrl,
+      'createdAt': createdAt,
+      'status': status,
+      if (waktuSelesai != null) 'waktuSelesai': waktuSelesai,
     };
   }
 }

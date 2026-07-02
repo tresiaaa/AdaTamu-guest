@@ -4,10 +4,6 @@ import '../widgets/adatamu_logo.dart';
 import '../widgets/animated_pill_button.dart';
 import 'guest_form_page2.dart';
 
-/// Page 1: Dashboard / halaman selamat datang.
-/// - Background gradient (teal -> cyan).
-/// - Teks "Selamat Datang" & logo AdaTamu muncul dengan animasi fade + slide.
-/// - Tombol "Isi Buku Tamu" yang interaktif, menuju ke page 2.
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -58,7 +54,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
 
-    // Tombol fade-in terakhir (70% - 100% durasi).
     _fadeButton = CurvedAnimation(
       parent: _controller,
       curve: const Interval(0.7, 1.0, curve: Curves.easeIn),

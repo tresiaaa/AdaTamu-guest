@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
-/// Field dropdown bergaya pil putih, konsisten dengan [GuestTextField]:
-/// border jadi merah dan pesan error tampil DI LUAR bubble saat tidak valid.
 class GuestDropdownField extends StatefulWidget {
   final String label;
   final String? value;
@@ -25,9 +23,6 @@ class GuestDropdownField extends StatefulWidget {
 class GuestDropdownFieldState extends State<GuestDropdownField> {
   String? _errorText;
 
-  /// Dipanggil dari luar (page2) saat tombol "Berikutnya" ditekan,
-  /// supaya tampilannya konsisten dengan validasi field teks lain.
-  /// Mengembalikan true jika valid (sudah dipilih).
   bool validate() {
     if (widget.value == null) {
       setState(() => _errorText = 'Jenis kelamin tidak boleh kosong');
@@ -68,11 +63,13 @@ class GuestDropdownFieldState extends State<GuestDropdownField> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
+
             color: AppColors.inputFill,
             onSelected: (selected) {
               _clearError();
               widget.onChanged(selected);
             },
+
             itemBuilder: (context) => widget.options
                 .map(
                   (opt) => PopupMenuItem<String>(
@@ -84,7 +81,7 @@ class GuestDropdownFieldState extends State<GuestDropdownField> {
                   ),
                 )
                 .toList(),
-            // Tampilan field (anchor) bergaya pil putih.
+
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
@@ -95,7 +92,6 @@ class GuestDropdownFieldState extends State<GuestDropdownField> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Teks rata tengah; ikon diletakkan di kanan.
                   Expanded(
                     child: Text(
                       widget.value ?? 'Pilih',

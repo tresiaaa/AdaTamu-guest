@@ -74,22 +74,26 @@ class _AnimatedPillButtonState extends State<AnimatedPillButton> {
                     color: AppColors.buttonText,
                   ),
                 )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (widget.icon != null) ...[
-                      Icon(widget.icon,
-                          size: widget.compact ? 16 : 18,
-                          color: AppColors.buttonText),
-                      const SizedBox(width: 8),
+              : FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (widget.icon != null) ...[
+                        Icon(widget.icon,
+                            size: widget.compact ? 16 : 18,
+                            color: AppColors.buttonText),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        widget.label,
+                        maxLines: 1,
+                        style: widget.compact
+                            ? AppTextStyles.buttonLabel.copyWith(fontSize: 14)
+                            : AppTextStyles.buttonLabel,
+                      ),
                     ],
-                    Text(
-                      widget.label,
-                      style: widget.compact
-                          ? AppTextStyles.buttonLabel.copyWith(fontSize: 14)
-                          : AppTextStyles.buttonLabel,
-                    ),
-                  ],
+                  ),
                 ),
         ),
       ),

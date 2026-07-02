@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/guest_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/guest_code.dart';
 import '../widgets/animated_pill_button.dart';
@@ -23,22 +24,35 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
   final _hpController = TextEditingController();
   String? _jenisKelamin;
 
-  // Menyimpan data dari page3 (keperluan, dll) supaya tidak hilang
-  // saat user menekan "Kembali" dari page3 ke page2.
   String? _keperluan;
   String _keperluanLainnya = '';
   String _keterangan = '';
   String? _fotoPath;
 
   static const List<String> _jenisKelaminOptions = ['Laki-Laki', 'Perempuan'];
+  String? _kodeTamu;
+  String? _kodeTamuError;
 
-  // Kode tamu dihitung sekali saat halaman ini dibuka, supaya tetap sama
-  // selama tamu mengisi form (page2 -> page3 -> kembali, dst). Murni dari
-  // tanggal hari ini + nomor urut kedatangan (lihat lib/utils/guest_code.dart).
-  late final String _kodeTamu = GuestCode.generate(
-    DateTime.now(),
-    GuestCode.dummyUrutanHariIni,
-  );
+  @override
+  void initState() {
+    super.initState();
+    _loadKodeTamu();
+  }
+
+  Future<void> _loadKodeTamu() async {
+    try {
+      final int urutan =
+          await GuestService.peekNextUrutanHariIni(DateTime.now());
+      if (!mounted) return;
+      setState(() {
+        _kodeTamu = GuestCode.generate(DateTime.now(), urutan);
+        _kodeTamuError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _kodeTamuError = e.toString());
+    }
+  }
 
   @override
   void dispose() {
@@ -55,9 +69,17 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
 
     if (!isFormValid || !isJenisKelaminValid) return;
 
-    // Kirim data yang sudah pernah diisi di page3 (kalau ada) sebagai
-    // initial values, dan tunggu hasil balik saat user menekan "Kembali"
-    // supaya data page3 tidak hilang ketika kembali ke page2.
+    if (_kodeTamu == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Kode tamu belum siap, mohon tunggu sebentar lalu coba lagi.'),
+        ),
+      );
+      if (_kodeTamuError != null) _loadKodeTamu();
+      return;
+    }
+
     final result = await Navigator.of(context).push<Map<String, String?>>(
       MaterialPageRoute(
         builder: (_) => GuestFormPage3(
@@ -65,7 +87,7 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
           jenisKelamin: _jenisKelamin!,
           alamat: _alamatController.text.trim(),
           nomorHandphone: _hpController.text.trim(),
-          kodeTamu: _kodeTamu,
+          kodeTamu: _kodeTamu!,
           initialKeperluan: _keperluan,
           initialKeperluanLainnya: _keperluanLainnya,
           initialKeterangan: _keterangan,
@@ -86,13 +108,45 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
 
   @override
   Widget build(BuildContext context) {
+    // Tampilkan loading/error sementara kode tamu belum siap
+    if (_kodeTamu == null) {
+      return Scaffold(
+        backgroundColor: AppColors.formBackground,
+        body: SafeArea(
+          child: Center(
+            child: _kodeTamuError != null
+                ? Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            color: Colors.red, size: 36),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Gagal menyiapkan kode tamu.\n$_kodeTamuError',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedPillButton(
+                          label: 'Coba Lagi',
+                          compact: true,
+                          onPressed: _loadKodeTamu,
+                        ),
+                      ],
+                    ),
+                  )
+                : const CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.formBackground,
       body: Column(
         children: [
-          // Navbar: logo di kiri, bubble kode tamu + ikon kalender di kanan.
-          GuestNavbar(kodeTamu: _kodeTamu),
-
+          GuestNavbar(kodeTamu: _kodeTamu!),
           Expanded(
             child: SafeArea(
               top: false,
@@ -108,15 +162,11 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
                         hintText: 'Masukkan nama lengkap',
                         validator: (value) {
                           final String trimmed = value?.trim() ?? '';
-                          if (trimmed.isEmpty) {
-                            return 'Nama tidak boleh kosong';
-                          }
-                          if (trimmed.length < 2) {
+                          if (trimmed.isEmpty) return 'Nama tidak boleh kosong';
+                          if (trimmed.length < 2)
                             return 'Nama minimal 2 karakter';
-                          }
-                          if (trimmed.length > 60) {
+                          if (trimmed.length > 60)
                             return 'Nama maksimal 60 karakter';
-                          }
                           return null;
                         },
                       ),
@@ -136,22 +186,16 @@ class _GuestFormPage2State extends State<GuestFormPage2> {
                         hintText: 'Masukkan alamat lengkap',
                         validator: (value) {
                           final String trimmed = value?.trim() ?? '';
-                          if (trimmed.isEmpty) {
+                          if (trimmed.isEmpty)
                             return 'Alamat tidak boleh kosong';
-                          }
-                          // Alamat minimal harus memuat Jalan + Nomor Rumah +
-                          // Kelurahan/Kecamatan, jadi cegah input yang terlalu
-                          // singkat (cuma 1 kata atau 1 huruf).
                           final List<String> words = trimmed
                               .split(RegExp(r'\s+'))
                               .where((w) => w.isNotEmpty)
                               .toList();
-                          if (words.length < 2) {
+                          if (words.length < 2)
                             return 'Alamat minimal terdiri dari 2 kata';
-                          }
-                          if (trimmed.length < 10) {
+                          if (trimmed.length < 10)
                             return 'Alamat terlalu singkat, tuliskan lebih lengkap';
-                          }
                           return null;
                         },
                       ),

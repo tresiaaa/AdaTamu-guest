@@ -4,23 +4,6 @@ import '../utils/guest_code.dart';
 import 'adatamu_logo.dart';
 import 'mini_calendar_dialog.dart';
 
-/// Header/navbar yang dipakai di semua halaman form tamu (Page2, Page3,
-/// dst). Berisi:
-/// - Logo AdaTamu di kiri.
-/// - Bubble kode tamu di kanan. Defaultnya kode tamu HARI INI (dihitung
-///   ulang secara internal, lihat [_displayedKodeTamu]). Kalau pengguna
-///   memilih tanggal lain lewat dialog kalender, bubble ini ikut berubah
-///   untuk PREVIEW kode tamu di tanggal tersebut — murni tampilan, tidak
-///   memengaruhi data yang akan tersimpan.
-/// - Ikon kalender di paling kanan, di sebelah kanan bubble kode tamu.
-///   Tap ikon ini membuka popup kalender kecil.
-///
-/// CATATAN soal [kodeTamu]: parameter ini adalah kode tamu "resmi" milik
-/// tamu yang sedang mengisi form (dipakai Page2/Page3 untuk identitas &
-/// saat menyimpan data — TIDAK boleh berubah hanya karena pengguna
-/// iseng buka-buka kalender). Navbar ini sengaja TIDAK menampilkan
-/// [kodeTamu] tersebut secara langsung, karena bubble di sini fungsinya
-/// khusus untuk preview kalender (lihat [_displayedKodeTamu]).
 class GuestNavbar extends StatefulWidget implements PreferredSizeWidget {
   final String kodeTamu;
 
@@ -34,31 +17,24 @@ class GuestNavbar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _GuestNavbarState extends State<GuestNavbar> {
-  // Tanggal yang sedang "aktif" untuk preview kode tamu. Mulai dari hari
-  // ini, lalu berubah setiap kali pengguna memilih tanggal lain di
-  // dialog kalender. Disimpan di sini (bukan cuma stringnya saja) supaya
-  // saat dialog dibuka LAGI, kalender bisa mulai dari tanggal yang
-  // TERAKHIR dipilih, bukan selalu balik ke hari ini.
-  late DateTime _activeDate = DateTime.now();
+  DateTime? _previewDate;
 
-  String get _displayedKodeTamu => GuestCode.generate(
-        _activeDate,
-        GuestCode.dummyUrutanHariIni,
-      );
+  String get _displayedKodeTamu => _previewDate == null
+      ? widget.kodeTamu
+      : GuestCode.generate(_previewDate!, 1);
 
   Future<void> _openCalendar() async {
     final DateTime? picked = await showMiniCalendarDialog(
       context,
-      initialDate: _activeDate,
+      initialDate: _previewDate ?? DateTime.now(),
     );
     if (picked == null || !mounted) return;
 
-    // Tanggal dipilih dari kalender -> tampilkan PREVIEW kode tamu untuk
-    // tanggal itu. Nomor urut tetap pakai dummy (lihat catatan TODO di
-    // guest_code.dart) karena belum terhubung database.
-    setState(() {
-      _activeDate = picked;
-    });
+    final DateTime now = DateTime.now();
+    final bool isToday = picked.year == now.year &&
+        picked.month == now.month &&
+        picked.day == now.day;
+    setState(() => _previewDate = isToday ? null : picked);
   }
 
   @override
@@ -73,14 +49,18 @@ class _GuestNavbarState extends State<GuestNavbar> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const AdaTamuLogo(scale: 0.55),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _GuestCodeBubble(kodeTamu: _displayedKodeTamu),
-                  const SizedBox(width: 10),
-                  _CalendarIconButton(onTap: _openCalendar),
-                ],
+              const Flexible(child: AdaTamuLogo(scale: 0.55)),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                        child: _GuestCodeBubble(kodeTamu: _displayedKodeTamu)),
+                    const SizedBox(width: 10),
+                    _CalendarIconButton(onTap: _openCalendar),
+                  ],
+                ),
               ),
             ],
           ),
@@ -92,7 +72,6 @@ class _GuestNavbarState extends State<GuestNavbar> {
 
 class _GuestCodeBubble extends StatelessWidget {
   final String kodeTamu;
-
   const _GuestCodeBubble({required this.kodeTamu});
 
   @override
@@ -109,14 +88,20 @@ class _GuestCodeBubble extends StatelessWidget {
         children: [
           const Icon(Icons.badge_rounded, size: 14, color: Colors.white),
           const SizedBox(width: 6),
-          Text(
-            kodeTamu,
-            style: TextStyle(
-              fontFamily: AppTextStyles.fontFamily,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: 0.3,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                kodeTamu,
+                maxLines: 1,
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
+              ),
             ),
           ),
         ],
@@ -127,7 +112,6 @@ class _GuestCodeBubble extends StatelessWidget {
 
 class _CalendarIconButton extends StatelessWidget {
   final VoidCallback onTap;
-
   const _CalendarIconButton({required this.onTap});
 
   @override

@@ -4,17 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
+import 'desktop_camera_capture_page.dart';
 
-/// Field untuk mengambil foto tamu, dari kamera ATAU galeri.
-///
-/// Gaya visual konsisten dengan [GuestTextField] & [GuestDropdownField]:
-/// label di atas, kotak putih bulat, border merah + pesan error saat
-/// belum diisi padahal wajib.
-///
-/// CATATAN: widget ini baru menangani pengambilan & preview foto secara
-/// LOKAL (di memori device, lewat package image_picker). Upload foto ke
-/// Firebase Storage belum dilakukan di sini — itu menyusul nanti saat
-/// tahap "sambung ke database" (lihat TODO di guest_form_page3.dart).
 class PhotoPickerField extends StatefulWidget {
   final File? value;
   final ValueChanged<File?> onChanged;
@@ -33,9 +24,6 @@ class PhotoPickerFieldState extends State<PhotoPickerField> {
   String? _errorText;
   final ImagePicker _picker = ImagePicker();
 
-  /// Dipanggil dari luar (page3) saat tombol "Simpan" ditekan, supaya
-  /// validasinya konsisten dengan field lain. Mengembalikan true jika
-  /// valid (foto sudah diambil).
   bool validate() {
     if (widget.value == null) {
       setState(() => _errorText = 'Wajib ambil gambar');
@@ -70,19 +58,70 @@ class PhotoPickerFieldState extends State<PhotoPickerField> {
     }
   }
 
-  // image_picker TIDAK mendukung ImageSource.camera di Windows desktop
-  // (cuma Android & iOS). Supaya tidak crash, opsi "Kamera" disembunyikan
-  // di Windows — tamu yang pakai app di komputer cukup pilih dari Galeri.
-  bool get _isCameraSupported => !kIsWeb && !Platform.isWindows;
+  bool get _useDesktopDialog =>
+      !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
-  Future<void> _showSourceSheet() async {
-    await showModalBottomSheet<void>(
+  List<Widget> _sourceOptions(BuildContext popupContext) {
+    return [
+      ListTile(
+        leading: const Icon(
+          Icons.photo_camera_rounded,
+          color: AppColors.inputBorderFocused,
+        ),
+        title: Text('Kamera', style: GoogleFonts.poppins(fontSize: 14)),
+        onTap: () => Navigator.of(popupContext).pop(ImageSource.camera),
+      ),
+      ListTile(
+        leading: const Icon(
+          Icons.photo_library_rounded,
+          color: AppColors.inputBorderFocused,
+        ),
+        title: Text('Galeri', style: GoogleFonts.poppins(fontSize: 14)),
+        onTap: () => Navigator.of(popupContext).pop(ImageSource.gallery),
+      ),
+    ];
+  }
+
+  Future<ImageSource?> _showDesktopDialog() {
+    return showDialog<ImageSource>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Ambil Foto Tamu',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.labelText,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ..._sourceOptions(dialogContext),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<ImageSource?> _showMobileSheet() {
+    return showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -107,41 +146,42 @@ class PhotoPickerFieldState extends State<PhotoPickerField> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (_isCameraSupported)
-                  ListTile(
-                    leading: const Icon(
-                      Icons.photo_camera_rounded,
-                      color: AppColors.inputBorderFocused,
-                    ),
-                    title: Text(
-                      'Kamera',
-                      style: GoogleFonts.poppins(fontSize: 14),
-                    ),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      _pickFrom(ImageSource.camera);
-                    },
-                  ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.photo_library_rounded,
-                    color: AppColors.inputBorderFocused,
-                  ),
-                  title: Text(
-                    _isCameraSupported ? 'Galeri' : 'Pilih File Foto',
-                    style: GoogleFonts.poppins(fontSize: 14),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _pickFrom(ImageSource.gallery);
-                  },
-                ),
+                ..._sourceOptions(sheetContext),
               ],
             ),
           ),
         );
       },
     );
+  }
+
+  Future<void> _showSourceSheet() async {
+    final ImageSource? source =
+        await (_useDesktopDialog ? _showDesktopDialog() : _showMobileSheet());
+
+    if (source == null || !mounted) return;
+
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+
+    if (source == ImageSource.camera && _useDesktopDialog) {
+      await _captureFromDesktopWebcam();
+      return;
+    }
+
+    await _pickFrom(source);
+  }
+
+  Future<void> _captureFromDesktopWebcam() async {
+    final XFile? photo = await showDialog<XFile>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (_) => const DesktopCameraCapturePage(),
+    );
+    if (photo == null || !mounted) return;
+
+    _clearError();
+    widget.onChanged(File(photo.path));
   }
 
   @override
@@ -173,8 +213,6 @@ class PhotoPickerFieldState extends State<PhotoPickerField> {
                     fit: StackFit.expand,
                     children: [
                       Image.file(widget.value!, fit: BoxFit.cover),
-                      // Lapisan gelap tipis + tombol ganti foto, supaya
-                      // jelas foto itu masih bisa diganti.
                       Positioned(
                         right: 8,
                         bottom: 8,

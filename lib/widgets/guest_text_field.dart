@@ -29,7 +29,6 @@ class _GuestTextFieldState extends State<GuestTextField> {
   @override
   void initState() {
     super.initState();
-    // Hapus pesan error begitu pengguna mulai/sedang mengisi.
     widget.controller.addListener(_clearErrorOnType);
   }
 
@@ -82,7 +81,6 @@ class _GuestTextFieldState extends State<GuestTextField> {
             decoration: InputDecoration(
               hintText: widget.hintText,
               border: InputBorder.none,
-              // Sembunyikan error bawaan agar tidak muncul di dalam bubble.
               errorStyle: const TextStyle(height: 0, fontSize: 0),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 18,
